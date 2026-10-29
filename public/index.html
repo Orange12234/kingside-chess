@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingside - play chess online</title>
+  <meta name="description" content="Play chess online with a friend or a random opponent.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/"><span class="brand-glyph" aria-hidden="true">&#9822;</span>Kingside</a>
+    <nav class="topnav" aria-label="More">
+      <a id="btn-puzzle" class="btn small" href="#/puzzle">Daily puzzle</a>
+      <a id="btn-tournaments" class="btn small" href="#/tournaments">Tournaments</a>
+      <a id="btn-bot" class="btn small" href="#/bot">Play bots</a>
+      <button id="btn-pgn" class="btn small" type="button">Analyse a PGN</button>
+      <a id="btn-rules" class="btn small" href="#/rules">Rules</a>
+    </nav>
+    <div class="finder">
+    <div class="finder-box">
+    <ul id="finder-results" class="finder-results" role="listbox" aria-label="Matching players" hidden></ul>
+    <form id="finder-form" class="finder-form" role="search" autocomplete="off">
+      <label class="sr-only" for="finder-input">Search players</label>
+      <input id="finder-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false"
+             aria-controls="finder-results" placeholder="Search players" maxlength="16" autocapitalize="off" spellcheck="false">
+    </form>
+    </div>
+  </div>
+    <div class="topbar-right">
+      <span id="conn" class="conn" hidden>Reconnecting&hellip;</span>
+      <button id="btn-sound" class="btn small sound-btn" type="button" aria-pressed="true" title="Sound on" aria-label="Sound on">&#128266;</button>
+      <div id="who"></div>
+      <a id="btn-play" class="btn primary" href="#/">Play</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Lobby -->
+    <section id="view-lobby" class="view">
+      <div class="lobby">
+        <div class="lobby-main">
+          <h1>Play chess with a friend or a stranger</h1>
+          <p class="lede">Pick a time limit, then find an opponent or send a link.</p>
+
+          <fieldset class="tcs">
+            <legend>Time per player</legend>
+            <div id="tc-chips" class="chips"></div>
+            <p class="hint">Minutes each side gets, plus seconds added after every move.</p>
+          </fieldset>
+
+          <div class="actions">
+            <button id="btn-seek" class="btn primary big" type="button">Play a random opponent</button>
+            <div class="friend">
+              <button id="btn-friend" class="btn big" type="button">Invite a friend</button>
+              <label class="color-pick">I play
+                <select id="friend-color">
+                  <option value="random">a random colour</option>
+                  <option value="w">White</option>
+                  <option value="b">Black</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div id="seek-status" class="seek-status" hidden>
+            <span class="pulse" aria-hidden="true"></span>
+            <span id="seek-text"></span>
+            <button id="btn-cancel-seek" class="btn small" type="button">Cancel</button>
+          </div>
+          <p id="guest-note" class="hint"></p>
+        </div>
+
+        <div class="lobby-board">
+          <div id="preview" class="board" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="lobby-cards">
+        <section class="card" id="account-card"></section>
+        <section class="card" id="tourney-card" hidden></section>
+        <section class="card" id="friends-card" hidden></section>
+        <section class="card" id="live-card"></section>
+        <section class="card">
+          <h2>Top players</h2>
+          <div id="leader-tabs" class="seg" role="group" aria-label="Rating category"></div>
+          <ol id="leaders" class="leaders"></ol>
+          <p id="leaders-empty" class="hint" hidden>No rated games yet. Log in and play a random opponent to get on the board.</p>
+        </section>
+      </div>
+    </section>
+
+    <!-- Profile -->
+    <section id="view-profile" class="view" hidden>
+      <div id="profile" class="profile"></div>
+    </section>
+
+    <!-- Moderation -->
+    <section id="view-mod" class="view" hidden>
+      <div id="mod" class="profile"></div>
+    </section>
+
+    <!-- Analysis and game review -->
+    <section id="view-analysis" class="view" hidden>
+      <div id="analysis" class="analysis"></div>
+    </section>
+
+    <!-- Rules -->
+    <section id="view-rules" class="view" hidden>
+      <article class="card rules">
+        <h1>Kingside rules</h1>
+        <p class="hint">Short version: play fair, be kind, and play as yourself. Moderators and the owner enforce these rules, and a real person looks at every automatic flag before anything happens.</p>
+
+        <h2>1. Fair play</h2>
+        <ul>
+          <li><strong>No engines or computer help.</strong> Do not use Stockfish, another chess engine, an analysis board or any bot to choose your moves in a game against a person. The Play bots page is for playing the computer, not for getting help in rated games.</li>
+          <li><strong>No outside help.</strong> No asking another person, a coach or a stream chat for moves while your game is going. No opening books or tablebases during a game.</li>
+          <li><strong>No playing through someone else.</strong> Do not let another person play your account, and do not play on someone else's.</li>
+          <li><strong>The system checks.</strong> After each rated game the server looks at how accurate each side played. A player whose recent rated games show both a very high win rate and very high accuracy is flagged for the moderators and the owner. A flag is not a punishment: a moderator looks at the games first, and a strong honest player can be flagged too.</li>
+        </ul>
+
+        <h2>2. Ratings</h2>
+        <ul>
+          <li><strong>No rating manipulation.</strong> Do not lose on purpose, trade wins with a friend, or use a second account to push a rating up or down.</li>
+          <li><strong>No sandbagging.</strong> Do not play badly on purpose to lower your rating and then beat weaker players.</li>
+          <li>Rating changes get smaller the higher your rating is, and every category (bullet, blitz, rapid) has its own rating. Ratings are decided by the server only.</li>
+          <li><strong>If an account is banned for good</strong>, the rating points it took from other players are given back to them.</li>
+        </ul>
+
+        <h2>3. Aborting and leaving games</h2>
+        <ul>
+          <li>You may <strong>abort</strong> a game before you have made your first move. Aborted games are not rated and change nobody's rating.</li>
+          <li>Aborting a lot is reported: after 3 aborts in 24 hours you get a warning, and at 5 the moderators and the owner are told. It is a flag for a human to look at, nothing happens automatically.</li>
+          <li>Do not walk away from games you are losing and do not stall on purpose. If you run out of time you lose on time, as usual.</li>
+        </ul>
+
+        <h2>4. Behaviour and chat</h2>
+        <ul>
+          <li>Be respectful. No insults, harassment, threats, hate speech or discrimination, in chat, in usernames or on profiles.</li>
+          <li>No spam, advertising or scams, and no sharing other people's private details.</li>
+          <li>Do not spam friend requests or challenges. Players can say no, and you can remove a friend at any time. Repeatedly pestering someone can be reported like any other harassment.</li>
+          <li>Usernames must not be offensive, must not pretend to be staff or a titled player, and must not copy someone else's name to fool people. Titles (GM, IM and so on) are only given by the owner.</li>
+        </ul>
+
+        <h2>5. Accounts</h2>
+        <ul>
+          <li>An email address is needed to sign up. It is private. It is not checked, but it is used to link accounts: <strong>if one email has several accounts and one of them is banned, all of them are banned</strong>, for the same reason.</li>
+          <li>A banned email cannot be used to sign up again. Making new accounts to get around a ban is ban evasion, and those accounts will be banned too.</li>
+          <li>You are responsible for what happens on your account. Keep your password to yourself.</li>
+        </ul>
+
+        <h2>6. Reporting</h2>
+        <ul>
+          <li>Use the <strong>Report player</strong> button on a player's profile and say what happened. Moderators see your username and your message.</li>
+          <li>Report honestly. Do not send false or joke reports, and do not report the same player again and again. You can send up to 5 reports a day.</li>
+        </ul>
+
+        <h2>7. Tournaments</h2>
+        <ul>
+          <li>Only the owner starts tournaments. Games are rated, and every rule above applies. Cheating in a tournament is treated as cheating anywhere else.</li>
+          <li>When you join, you are paired automatically for as long as it runs. If you have to leave, press <strong>Pause</strong> so your opponents are not left waiting. A game you never move in is aborted, and you are paused automatically.</li>
+          <li>Do not team up with a friend to feed each other points, and do not lose on purpose. The standings are checked, and moderators can remove players from a tournament result by banning them.</li>
+        </ul>
+
+        <h2>8. What happens if you break the rules</h2>
+        <ul>
+          <li>Moderators and the owner can ban an account for a set time or for good, always with a written reason you can see when you try to log in.</li>
+          <li>Cheating, rating manipulation and ban evasion are the most serious and can lead to a permanent ban of every account linked to the same email.</li>
+          <li><strong>Appeals:</strong> if you think a ban was a mistake, try to log in. The login box shows your ban and an <em>Appeal this ban</em> button. Write what happened (you need your password to prove the account is yours). One appeal at a time, and a moderator reads every one.</li>
+        </ul>
+
+        <p class="hint">These rules can change. Playing on Kingside means you agree to them.</p>
+        <p><a class="btn small" href="#/">Back to the lobby</a></p>
+      </article>
+    </section>
+
+    <!-- Tournaments -->
+    <section id="view-tournament" class="view" hidden>
+      <div id="tournament" class="tournament"></div>
+    </section>
+
+    <!-- Daily puzzle -->
+    <section id="view-puzzle" class="view" hidden>
+      <div id="puzzle" class="bot"></div>
+    </section>
+
+    <!-- Play against Stockfish -->
+    <section id="view-bot" class="view" hidden>
+      <div id="bot" class="bot"></div>
+    </section>
+
+    <!-- Game -->
+    <section id="view-game" class="view" hidden>
+      <div class="game">
+        <div class="game-board">
+          <div class="player" id="p-top">
+            <span class="dot" title="Connection"></span>
+            <span class="swatch"></span>
+            <span class="pname"></span>
+            <span class="prating"></span>
+            <span class="clock">0:00</span>
+          </div>
+
+          <div class="board-wrap">
+            <div id="board" class="board"></div>
+            <div id="promo" class="promo" hidden></div>
+            <div id="endcard" class="endcard" hidden>
+              <div class="endcard-inner" role="dialog" aria-labelledby="end-title">
+                <button id="end-close" class="end-close" type="button" aria-label="Close">&times;</button>
+                <div id="end-icon" class="end-icon" aria-hidden="true"></div>
+                <h2 id="end-title"></h2>
+                <p id="end-reason" class="end-reason"></p>
+                <p id="end-rating" class="end-rating"></p>
+                <a id="end-review" class="btn primary big" href="#/" hidden>Game review</a>
+                <div class="end-row">
+                  <button id="end-new" class="btn" type="button" hidden>New game</button>
+                  <button id="end-rematch" class="btn" type="button" hidden>Rematch</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="player" id="p-bottom">
+            <span class="dot" title="Connection"></span>
+            <span class="swatch"></span>
+            <span class="pname"></span>
+            <span class="prating"></span>
+            <span class="clock">0:00</span>
+          </div>
+        </div>
+
+        <aside class="side">
+          <div class="gameinfo"><span id="g-tc"></span><span id="g-rated" class="tag"></span></div>
+          <div id="status" class="status" aria-live="polite"></div>
+          <div id="status-sub" class="status-sub"></div>
+
+          <div id="invite" class="invite" hidden>
+            <label for="invite-link">Send this link to your friend</label>
+            <div class="invite-row">
+              <input id="invite-link" type="text" readonly>
+              <button id="btn-copy" class="btn small" type="button">Copy link</button>
+            </div>
+            <p class="hint">The game starts as soon as they open it.</p>
+          </div>
+
+          <div id="moves" class="moves" aria-label="Moves"></div>
+
+          <div class="controls">
+            <button id="btn-draw" class="btn small" type="button" hidden>Offer a draw</button>
+            <span id="draw-offered" class="note" hidden>Draw offered</span>
+            <span id="draw-prompt" class="draw-prompt" hidden>
+              <span>Your opponent offers a draw</span>
+              <button id="btn-draw-accept" class="btn small primary" type="button">Accept</button>
+              <button id="btn-draw-decline" class="btn small" type="button">Decline</button>
+            </span>
+            <button id="btn-abort" class="btn small" type="button" hidden>Abort game</button>
+            <button id="btn-resign" class="btn small danger" type="button" hidden>Resign</button>
+            <button id="btn-tpause" class="btn small" type="button" hidden>Pause tournament</button>
+            <button id="btn-rematch" class="btn small primary" type="button" hidden>Rematch</button>
+            <a id="btn-review" class="btn small primary" href="#/" hidden>Review game</a>
+            <a id="btn-pgn-dl" class="btn small" href="#/" download hidden>Download PGN</a>
+            <button id="btn-lobby" class="btn small" type="button">Back to lobby</button>
+          </div>
+
+          <div class="chat">
+            <div id="chat-log" class="chat-log" aria-live="polite"></div>
+            <form id="chat-form" class="chat-form" autocomplete="off">
+              <input id="chat-input" type="text" maxlength="200" placeholder="Say something nice" aria-label="Chat message">
+              <button class="btn small" type="submit">Send</button>
+            </form>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="auth">
+    <form id="auth-form" method="dialog" autocomplete="on">
+      <h2 id="auth-title">Log in</h2>
+      <p id="auth-note" class="hint" hidden></p>
+      <label>Username
+        <input id="auth-user" name="username" type="text" autocomplete="username" minlength="3" maxlength="16" required>
+      </label>
+      <label id="auth-email-label" hidden>Email
+        <input id="auth-email" name="email" type="email" autocomplete="email" maxlength="254">
+        <small class="hint">Needed to make an account. It is private. If one email has several accounts and one is banned, they are all banned. By signing up you agree to the <a href="#/rules" id="auth-rules">rules</a>.</small>
+      </label>
+      <label>Password
+        <input id="auth-pass" name="password" type="password" autocomplete="current-password" minlength="6" maxlength="72" required>
+      </label>
+      <p id="auth-error" class="form-error" role="alert"></p>
+      <p id="auth-appeal-row" hidden><button id="auth-appeal" class="btn small" type="button">Appeal this ban</button></p>
+      <div class="dialog-actions">
+        <button id="auth-submit" class="btn primary" type="submit">Log in</button>
+        <button id="auth-cancel" class="btn" type="button">Cancel</button>
+      </div>
+      <p class="switch"><span id="auth-switch-text">New here?</span> <button id="auth-switch" class="linklike" type="button">Create an account</button></p>
+    </form>
+  </dialog>
+
+  <dialog id="challenge-dialog">
+    <form method="dialog">
+      <h2 id="challenge-title">Challenge</h2>
+      <p id="challenge-sub" class="hint"></p>
+      <div class="dialog-actions">
+        <button id="challenge-accept" class="btn primary" type="button">Accept</button>
+        <button id="challenge-decline" class="btn" type="button">Decline</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="appeal-dialog">
+    <form id="appeal-form" method="dialog">
+      <h2>Appeal your ban</h2>
+      <p id="appeal-ban" class="hint"></p>
+      <label>Username
+        <input id="appeal-user" type="text" autocomplete="username" maxlength="16" required>
+      </label>
+      <label>Password
+        <input id="appeal-pass" type="password" autocomplete="current-password" maxlength="72" required>
+        <small class="hint">Needed to prove the account is yours.</small>
+      </label>
+      <label for="appeal-message">What would you like the moderators to know?
+        <textarea id="appeal-message" rows="6" minlength="20" maxlength="1000" required placeholder="Explain what happened and why you think the ban should be lifted."></textarea>
+      </label>
+      <p id="appeal-error" class="form-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="appeal-submit" class="btn primary" type="submit">Send appeal</button>
+        <button id="appeal-cancel" class="btn" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="report-dialog">
+    <form id="report-form" method="dialog">
+      <h2 id="report-title">Report player</h2>
+      <label for="report-reason">Why are you reporting them?
+        <textarea id="report-reason" rows="5" maxlength="500" required placeholder="For example: cheating, abusive chat, bad username..."></textarea>
+      </label>
+      <p class="hint">Moderators will see your username and this message.</p>
+      <p id="report-error" class="form-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="report-submit" class="btn primary" type="submit">Send report</button>
+        <button id="report-cancel" class="btn" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="pgn-dialog">
+    <form id="pgn-form" method="dialog">
+      <h2>Analyse a game</h2>
+      <label for="pgn-text">Paste a PGN
+        <textarea id="pgn-text" rows="10" spellcheck="false" placeholder="1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 ..."></textarea>
+      </label>
+      <label class="file-pick">Or open a .pgn file
+        <input id="pgn-file" type="file" accept=".pgn,.txt,text/plain">
+      </label>
+      <p id="pgn-error" class="form-error" role="alert"></p>
+      <p class="hint">Stockfish runs in your browser. Your game is not uploaded anywhere.</p>
+      <div class="dialog-actions">
+        <button class="btn primary" type="submit">Analyse</button>
+        <button id="pgn-cancel" class="btn" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script src="config.js"></script>
+  <script src="analysis.js"></script>
+  <script src="bot.js"></script>
+  <script src="puzzle.js"></script>
+  <script src="tournament.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
